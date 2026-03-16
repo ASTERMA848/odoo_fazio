@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_move_form_carpenter_credit" model="ir.ui.view">
+        <field name="name">account.move.carpenter.credit.inherit</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <!-- Pestaña en la vista formulario de facturas -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Créditos del Carpintero (Padre)" name="parent_credits" invisible="not parent_partner_id">
+                    <field name="parent_partner_id" invisible="1"/>
+                    <group>
+                        <div class="alert alert-info" role="alert" invisible="payment_state in ('paid', 'in_payment', 'reversed') or not parent_partner_id">
+                            El contacto principal (Carpintero) tiene saldos a favor (anticipos). Puedes aplicarlos a esta factura.
+                        </div>
+                    </group>
+                    <!-- Mostramos las lineas de credito disponibles del padre -->
+                    <field name="parent_credit_line_ids" readonly="1" invisible="payment_state in ('paid', 'in_payment', 'reversed')" force_save="1">
+                        <list string="Créditos Disponibles" decoration-info="balance &lt; 0">
+                            <field name="date"/>
+                            <field name="move_id" string="Referencia"/>
+                            <field name="name" string="Concepto"/>
+                            <field name="amount_residual" string="Saldo Pendiente"/>
+                            <field name="balance" invisible="1"/>
+                            <button name="action_apply_to_invoice" 
+                                    type="object" 
+                                    string="Aplicar Crédito" 
+                                    icon="fa-plus-circle" 
+                                    class="oe_highlight"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

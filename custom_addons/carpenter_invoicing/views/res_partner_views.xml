@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_carpenter" model="ir.ui.view">
+        <field name="name">res.partner.carpenter.inherit</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='category_id']" position="after">
+                <field name="is_carpenter" invisible="parent_id != False"/>
+            </xpath>
+            <!-- En Odoo, los campos vat y l10n_latam_identification_type_id a veces se ocultan si is_company es False o si es hijo. 
+                 Trataremos de forzarlos a ser editables siempre. -->
+            <xpath expr="//field[@name='vat']" position="attributes">
+                <attribute name="readonly">False</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

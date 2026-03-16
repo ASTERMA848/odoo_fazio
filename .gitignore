@@ -1,0 +1,21 @@
+# Odoo environment
+venv/
+odoo/
+*.pyc
+__pycache__/
+*.log
+
+# Sensitive info
+odoo.conf
+
+# Scratch scripts
+check_module.py
+create_user.py
+drop_db.py
+enable_accounting.py
+enable_accounting_sql.py
+reset_password.py
+
+# System items
+.DS_Store
+Thumbs.db
