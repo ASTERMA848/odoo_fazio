@@ -1,18 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- 
+        Hereda de la vista base oficial de contactos (base.view_partner_form)
+        para inyectar los ajustes de visibilidad de relaciones, etiquetas adaptadas
+        e independencia fiscal editable desde el frontend.
+    -->
     <record id="view_partner_form_carpenter" model="ir.ui.view">
         <field name="name">res.partner.carpenter.inherit</field>
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
+            
+            <!-- 
+                1. DUALIDAD DE CAMPO RELACIÓN (Vista para Individuales):
+                Oculta el campo parent_id (Company) estándar si el contacto actual es una Empresa (is_company = True).
+                Mantiene el dominio expandido para poder elegir tanto Compañías como Carpinteros como padres.
+            -->
+            <xpath expr="//field[@name='parent_id']" position="attributes">
+                <attribute name="invisible">is_company or (((is_company and not parent_id) or company_name) and company_name != '')</attribute>
+                <attribute name="domain">['|', ('is_company', '=', True), ('is_carpenter', '=', True)]</attribute>
+            </xpath>
+            
+            <!-- 
+                2. DUALIDAD DE CAMPO RELACIÓN (Vista para Empresas):
+                Añade una réplica del campo parent_id que solo es visible si el contacto actual es Empresa (is_company = True).
+                Esta réplica utiliza de manera limpia la etiqueta personalizada "Contacto relacionado" y su placeholder.
+            -->
+            <xpath expr="//field[@name='parent_id']" position="after">
+                <field name="parent_id"
+                    widget="res_partner_many2one"
+                    placeholder="Contacto relacionado..."
+                    string="Contacto relacionado"
+                    domain="['|', ('is_company', '=', True), ('is_carpenter', '=', True)]"
+                    context="{'default_is_company': True, 'default_user_id': user_id, 'show_address': False}"
+                    invisible="not is_company"/>
+            </xpath>
+            
+            <!-- Exposición del checkbox que marca si el contacto actúa como un Carpintero (Padre) -->
             <xpath expr="//field[@name='category_id']" position="after">
                 <field name="is_carpenter" invisible="parent_id != False"/>
             </xpath>
-            <!-- En Odoo, los campos vat y l10n_latam_identification_type_id a veces se ocultan si is_company es False o si es hijo. 
-                 Trataremos de forzarlos a ser editables siempre. -->
+
+            <!-- 
+                4. BOTÓN INTELIGENTE ADICIONAL (Facturado Relacionados):
+                Inyecta un nuevo botón inteligente en la caja de botones (oe_button_box)
+                que muestra el monto facturado a los contactos hijos/relacionados y da acceso a sus facturas.
+                Es visible únicamente si el contacto actual es un Carpintero (is_carpenter = True).
+            -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button type="object" class="oe_stat_button" icon="fa-pencil-square-o" name="action_view_related_partner_invoices"
+                    groups="account.group_account_invoice,account.group_account_readonly"
+                    context="{'default_partner_id': id}"
+                    invisible="not is_carpenter">
+                    <div class="o_form_field o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="total_invoiced_related" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        </span>
+                        <span class="o_stat_text">Facturado Relac.</span>
+                    </div>
+                </button>
+            </xpath>
+            
+            <!-- 
+                5. ANULACIÓN DE RESTRICCIONES DE EDICIÓN:
+                Nativamente, Odoo y sus localizaciones bloquean como readonly el CUIT, el Tipo de Documento
+                y la Responsabilidad AFIP cuando el contacto tiene un Padre vinculado.
+                Forzamos a readonly="False" para permitir identidades fiscales e impresiones independientes.
+            -->
             <xpath expr="//field[@name='vat']" position="attributes">
                 <attribute name="readonly">False</attribute>
             </xpath>
+            <xpath expr="//field[@name='l10n_ar_afip_responsibility_type_id']" position="attributes">
+                <attribute name="readonly">False</attribute>
+            </xpath>
+            <xpath expr="//field[@name='l10n_latam_identification_type_id']" position="attributes">
+                <attribute name="readonly">False</attribute>
+            </xpath>
+            
         </field>
     </record>
 </odoo>
