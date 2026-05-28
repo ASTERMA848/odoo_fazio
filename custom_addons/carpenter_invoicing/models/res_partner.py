@@ -43,6 +43,20 @@ class ResPartner(models.Model):
                 
         return commercial_fields
 
+    @api.model
+    def _synced_commercial_fields(self):
+        """
+        [SOBREESCRITURA DE MÉTODO NATIVO DE ODOO]
+        Determina qué campos comerciales se propagan hacia el contacto Padre.
+        Removemos 'vat' (CUIT) de esta lista para evitar que al guardar el Hijo,
+        su CUIT intente sobreescribir el documento (ej: DNI/CUIT) del Padre.
+        """
+        synced_fields = super(ResPartner, self)._synced_commercial_fields()
+        if 'vat' in synced_fields:
+            synced_fields.remove('vat')
+        return synced_fields
+
+
     @api.depends('is_company', 'name', 'parent_id.is_company', 'type', 'company_name', 'parent_id.is_carpenter')
     def _compute_display_name(self):
         """
@@ -128,4 +142,7 @@ class ResPartner(models.Model):
         if children:
             action['context']['default_partner_id'] = children[0].id
         return action
+
+
+
 
